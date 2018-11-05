@@ -3,7 +3,26 @@
 import os
 import argparse
 import tempfile
-from contextlib import redirect_stdout
+import sys
+
+try:
+    from contextlib import redirect_stdout
+except ImportError:
+    class redirect_stdout(object):
+        _stream = "stdout"
+
+        def __init__(self, new_target):
+            super(redirect_stdout, self).__init__()
+            self._new_target = new_target
+            self._old_targets = []
+
+        def __enter__(self):
+            self._old_targets.append(getattr(sys, self._stream))
+            setattr(sys, self._stream, self._new_target)
+            return self._new_target
+
+        def __exit__(self, exctype, excinst, exctb):
+            setattr(sys, self._stream, self._old_targets.pop())
 
 parser = argparse.ArgumentParser(description="Run python-enhanced bash scripts")
 parser.add_argument("script", action="store",
